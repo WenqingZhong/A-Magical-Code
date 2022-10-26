@@ -1,41 +1,46 @@
 import itertools
+import numpy as np
+import string
 
 #HYPERPARAMETERS
 
 #first SAFE_CARDS amount of cards, we do not care about
 #eg. we dont care about cards 0,1,2, ...., SAFE_CARDS-1
-SAFE_CARDS = 52-7
+CARDS_FOR_ARITHMETIC_CODING = 20
+ARITH_ACCURACY = 9
 
 class Agent:
     def __init__(self):
 
-        #key = bit string
-        #value = message
-        self.message_dict = {}
-
-        #number of total messages so far
-        self.message_count = 0
+        self.values = " "+string.ascii_lowercase
 
         #index of permutations
-        self.perm_idx = list(itertools.permutations(list(range(SAFE_CARDS, 52))))
+        #self.perm_idx = list(itertools.permutations(list(range(52-CARDS_FOR_ARITHMETIC_CODING, 52))))
 
     def encode(self, message):
-        key = self.perm_idx[self.message_count]
-        self.message_dict[key] = message
-        self.message_count += 1
 
-        return list(range(SAFE_CARDS)) + list(key)
+        min_bound = 0
+        max_bound = 1
+
+        for c in message:
+            ranges = np.linspace(min_bound,max_bound,len(self.values)+1)
+            
+            r = self.values.index(c)
+            min_bound = ranges[r]
+            max_bound = ranges[r+1]
+        
+        #the float of the value
+        val = (max_bound+min_bound)/2
+        print(val)
+        
+        #convert decimal to binary
+        val_as_int = int(str(val)[2:2+ARITH_ACCURACY])
+        print(val_as_int)
+        val_as_bin = str(bin(val_as_int))[2:]
+        print(val_as_bin)
+
+        return
 
     def decode(self, deck):
         
-        key_builder = []
-        for num in deck:
-            if num >= SAFE_CARDS:
-                key_builder.append(num)
-        
-        key = tuple(key_builder)
-
-        if key in self.message_dict:
-            return self.message_dict[key]
-
         return "NULL"
