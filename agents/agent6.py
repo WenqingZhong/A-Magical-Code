@@ -1,7 +1,4 @@
-from base64 import encode
 import itertools
-from unicodedata import decimal
-import numpy as np
 import string
 from decimal import *
 import math
@@ -12,7 +9,7 @@ import math
 #eg. we dont care about cards 0,1,2, ...., SAFE_CARDS-1
 CARDS_FOR_ARITHMETIC_CODING = 26
 PADDING_CARDS = 52 - CARDS_FOR_ARITHMETIC_CODING
-ARITH_ACCURACY = 25
+ARITH_ACCURACY = 26
 
 getcontext().prec = 50
 
