@@ -1,5 +1,6 @@
 from base64 import encode
 import itertools
+from unicodedata import decimal
 import numpy as np
 import string
 from decimal import *
@@ -13,7 +14,7 @@ CARDS_FOR_ARITHMETIC_CODING = 26
 PADDING_CARDS = 52 - CARDS_FOR_ARITHMETIC_CODING
 ARITH_ACCURACY = 25
 
-getcontext().prec = 20
+getcontext().prec = 50
 
 class Agent:
     def __init__(self):
@@ -84,15 +85,20 @@ class Agent:
         return val
 
     def get_word(self, decimal_value):
+        result = ""
+        while len(result) < 30:
+            for c in self.arith_boundaries:
+                min_bound = Decimal(self.arith_boundaries[c][0])
+                max_bound = Decimal(self.arith_boundaries[c][1])
 
-        result = 0
-        for c in self.arith_boundaries:
-            min_bound = Decimal(self.arith_boundaries[c][0])
-            max_bound = Decimal(self.arith_boundaries[c][1])
-
-            if c < min_bound and c > max_bound:
-                result += c
-            
+                if decimal_value > min_bound and decimal_value < max_bound:
+                    if c == "$":
+                        return result
+                    result += c
+                    #print(result)
+                    decimal_value = Decimal((decimal_value-min_bound) / (max_bound-min_bound))
+                elif decimal_value == min_bound or decimal_value == max_bound:
+                    raise Exception("Error in Parsing Word")
         return result
 
     def cards_to_number(self, cards):
@@ -103,7 +109,7 @@ class Agent:
 
         ordered_cards = sorted(cards)
         permutations = math.factorial(num_cards)
-        sub_list_size = permutations / num_cards
+        sub_list_size = permutations // num_cards
         sub_list_indx = sub_list_size * ordered_cards.index(cards[0])
 
         #print(int(sub_list_indx))
@@ -134,18 +140,17 @@ class Agent:
         val = Decimal(self.get_arithmatic_code(message))
         
         #convert decimal to binary
-        val_as_int = int(str(val)[2:])
+        val_as_int = int(str(val)[2:2+ARITH_ACCURACY])
 
         #encode to a card sequence
         padded_cards = list(range(0,PADDING_CARDS))
         arith_cards = list(range(PADDING_CARDS, 52))
 
-        print("Number to Cards")
         print(val_as_int)
         encoded_cards = self.number_to_cards(val_as_int, arith_cards)
 
         #add padded cards to the end
-        print(encoded_cards)
+        #print(encoded_cards)
         return padded_cards+encoded_cards
 
     def decode(self, deck):
@@ -155,22 +160,21 @@ class Agent:
         for num in deck:
             if num >= PADDING_CARDS:
                 encoded_cards.append(num)
-        print(encoded_cards)
+        #print(encoded_cards)
         #find the decimal value from it
         val = int(self.cards_to_number(encoded_cards))
+        print(val)
         val_as_Decimal = Decimal("0."+str(val))
-        print(val_as_Decimal)
 
+        #TODO IDEAS:
         #first card is the whether the number of 1's is even or odd
         #check the rest of the deck to confirm the number
-
         #check the delimiter at the end
 
-
-        return "NULL"
+        return self.get_word(val_as_Decimal)
 
 if __name__ == "__main__":
     agent = Agent()
-    message = "hello i am maximo"
+    message = "metabolic proces"
     deck = agent.encode(message)
     print(agent.decode(deck))
