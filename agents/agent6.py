@@ -76,7 +76,6 @@ class Agent:
 
             min_bound += Decimal(small)*r
             max_bound = min_bound + Decimal(big-small)*r
-            #print((max_bound+min_bound)/2)
 
         val = (max_bound+min_bound)/2
         return val
@@ -161,7 +160,7 @@ class Agent:
         #find the decimal value from it
         val = int(self.cards_to_number(encoded_cards))
         print(val)
-        val_as_Decimal = Decimal("0."+str(val))
+        val_as_Decimal = Decimal("0."+"0"*(ARITH_ACCURACY-len(str(val)))+str(val))
 
         #TODO IDEAS:
         #first card is the whether the number of 1's is even or odd
@@ -172,6 +171,6 @@ class Agent:
 
 if __name__ == "__main__":
     agent = Agent()
-    message = "metabolic proces"
+    message = "indonesian flag"
     deck = agent.encode(message)
     print(agent.decode(deck))
