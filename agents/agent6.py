@@ -1,6 +1,7 @@
 from cards import generate_deck
 import numpy as np
 from itertools import permutations
+import math
 
 class Agent:
     def __init__(self):
@@ -37,29 +38,25 @@ class Agent:
             binary = self.huff_LtoB[l]
             self.huff_BtoL[binary] = l
 
-        self.permu_map ={}
-        all_permu = permutations([1, 2, 3, 4])
-        for i in range(24):
-            self.permu_map[i] = all_permu[i]
+        self.zero_permu_map=self.get_permutation_map(4)
 
-    def numberToBase(self,n, b):
-        if n == 0:
-            return [0]
-        digits = []
-        while n:
-            digits.append(int(n % b))
-            n //= b
-        return digits[::-1]
+    def get_permutation_length(self,num):
+        permutation_length=0
+        for i in range(1, 53):
+            num_permu = math.factorial(i) - 1
+            if num < num_permu:
+                permutation_length = i
+                break
+        return permutation_length
 
-    def baseToNumber(self, arr, b):
-        if len(arr) == 0:
-            return 0
-        power = len(arr) - 1
-        num = 0
-        for a in arr:
-            num += a * (b ** power)
-            power -= 1
-        return num
+    def get_permutation_map(self,permu_length):
+        permu_list=[i for i in range(permu_length)]
+        all_permu = list(permutations([permu_list]))
+        permu_map={}
+        for i in range(len(all_permu)):
+            permu_map[i]=all_permu[i]
+
+        return permu_map
 
     def countLeadingZeros(self,binary):
         num = 0
@@ -70,38 +67,22 @@ class Agent:
         return num
 
     def encodeDeck(self,encode_num, num_leading_zero):
-        encode_num.reverse()
-        cur = 12
-        used_deck = []
-        for num in encode_num:
-            permu = self.permu_map[num]
-            group_start_card = cur * 4
-            group = {1: group_start_card, 2: group_start_card + 1, 3: group_start_card + 2, 4: group_start_card + 3}
-            permu_card = [group[p] for p in permu]
-            used_deck.append(permu_card)
-            cur -= 1
+        deck=[i for i in range(52)]
+        permu_length=self.get_permutation_length(encode_num)
+        permu_map=self.get_permutation_map(permu_length)
+        permutation=permu_map[encode_num]
+        used_deck=[i for i in range(52-permu_length,52)]
+        arrange_used_deck=[]
+        for p in permutation:
+            arrange_used_deck.append(used_deck[p])
 
-        permu_zero = self.permu_map[num_leading_zero]
+        leading_zero_card=self.zero_permu_map[num_leading_zero]
+        unused_deck=deck-leading_zero_card-arrange_used_deck
+        final_deck=unused_deck+leading_zero_card+arrange_used_deck
 
-        group_zero = {1: 0, 2: 1, 3: 2, 4: 3}
-        permu_card = [group_zero[p] for p in permu_zero]
-        used_deck.append(permu_card)
-        used_deck.reverse()
 
-        deck = []
-        for i in range(1, cur + 1):
-            group_start_card = i * 4
-            deck.append(group_start_card)
-            deck.append(group_start_card + 1)
-            deck.append(group_start_card + 2)
-            deck.append(group_start_card + 3)
-
-        for group in used_deck:
-            for card in group:
-                deck.append(card)
-
-        print(deck)
-        return deck
+        print(final_deck)
+        return final_deck
 
     def decodeDeck(self, deck):
         count_unused = 0
@@ -147,11 +128,8 @@ class Agent:
 
         # print("encode binary:", binary)
         # print("leading zero:",num_leading_zero)
-        decimal = int(binary, 2)
-        print("first decimal:", decimal)
-        encode_num = self.numberToBase(decimal, 24)
-
-        print(encode_num)
+        encode_num = int(binary, 2)
+        print("decimal:", encode_num)
         #return encode_num, num_leading_zero
         deck=self.encodeDeck(encode_num, num_leading_zero)
 
